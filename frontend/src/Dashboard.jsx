@@ -9,14 +9,14 @@ import {
   RefreshCw, 
   Database,
   Layers,
-  MessageSquare // New icon for opening the sliding assistant
+  MessageSquare
 } from "lucide-react";
-import SlidingChatbot from "./SlidingChatbot"; // Ensure this import path matches your folder structure
+import SlidingChatbot from "./SlidingChatbot"; // Import our brand-new sliding drawer
 
 const API_BASE = "http://localhost:8000";
 
 export default function Dashboard() {
-  // --- Original Data & Validation Pipeline States ---
+  // --- Original Validation Dashboard States ---
   const [summary, setSummary] = useState(null);
   const [records, setRecords] = useState([]);
   const [filter, setFilter] = useState("all");
@@ -24,27 +24,21 @@ export default function Dashboard() {
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  // --- Unified Chat & AI Assistant States ---
-  const [question, setQuestion] = useState("");
+  // --- Unified Chat & Drawer Control States ---
+  const [question, setQuestion] = useState(""); // Holds the currently typed question (shared input)
   const [asking, setAsking] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false); // Controls the sliding panel visibility
-  
-  // This state is shared. If the sliding panel is open, it shows this exact same history!
+  const [isChatOpen, setIsChatOpen] = useState(false); // Controls sliding visibility
   const [chatHistory, setChatHistory] = useState([
-    { sender: 'bot', text: "Hi! Ask me any analytical questions about your KPI data." }
+    { sender: "bot", text: "Hi! Ask me any analytical questions about your KPI data." }
   ]);
 
-  // Load KPI Metrics and Stream Validation Log Data
   const loadData = async () => {
     setRefreshing(true);
     try {
-      // 1. Fetch KPI Summary Metrics
       const summaryRes = await fetch(`${API_BASE}/api/summary`);
       if (summaryRes.ok) {
         setSummary(await summaryRes.json());
       }
-
-      // 2. Fetch Filtered Records
       const statusParam = filter === "all" ? "" : `?status=${filter}`;
       const recordsRes = await fetch(`${API_BASE}/api/records${statusParam}`);
       if (recordsRes.ok) {
@@ -57,15 +51,12 @@ export default function Dashboard() {
     }
   };
 
-  // Run AI Patterns Engine
   const loadInsights = async () => {
     setLoadingInsights(true);
     setInsights("");
     try {
       const res = await fetch(`${API_BASE}/api/insights`);
       const data = await res.json();
-      
-      // Handle both structured object patterns or raw string fallback
       if (typeof data.insights === "string") {
         setInsights(data.insights);
       } else if (data.patterns) {
@@ -83,41 +74,39 @@ export default function Dashboard() {
     }
   };
 
-  // Sync automatic polling on filter changes
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 15000); // 15s auto-polling
+    const interval = setInterval(loadData, 15000);
     return () => clearInterval(interval);
   }, [filter]);
 
-  // Unified Message Dispatcher (Sends query to API and synchronizes the conversation)
-  const handleAsk = async (explicitText = "") => {
-    const textToSend = explicitText.trim() || question.trim();
-    if (!textToSend) return;
-
+  // Unified Request Sender (updates shared history on response)
+  const handleAsk = async () => {
+    if (!question.trim()) return;
+    
+    const userMessage = question.trim();
+    setQuestion(""); // Instantly clear text input
     setAsking(true);
-    if (!explicitText) setQuestion(""); // Clear the input field on submit
 
-    // Update local chat logs instantly to show the user's question
-    const updatedHistoryWithUser = [...chatHistory, { sender: 'user', text: textToSend }];
-    setChatHistory(updatedHistoryWithUser);
+    // Update shared chat log immediately
+    const updatedHistory = [...chatHistory, { sender: "user", text: userMessage }];
+    setChatHistory(updatedHistory);
 
     try {
       const res = await fetch(`${API_BASE}/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: textToSend }),
+        body: JSON.stringify({ question: userMessage }),
       });
       
       if (res.ok) {
         const data = await res.json();
-        // Append backend response safely to the synchronized history
-        setChatHistory([...updatedHistoryWithUser, { sender: 'bot', text: data.answer }]);
+        setChatHistory([...updatedHistory, { sender: "bot", text: data.answer }]);
       } else {
-        setChatHistory([...updatedHistoryWithUser, { sender: 'bot', text: "The AI gateway returned an error. Please try again." }]);
+        setChatHistory([...updatedHistory, { sender: "bot", text: "The AI gateway returned an error. Please try again." }]);
       }
     } catch (e) {
-      setChatHistory([...updatedHistoryWithUser, { sender: 'bot', text: "Could not reach the AI query service. Ensure backend app.py is running." }]);
+      setChatHistory([...updatedHistory, { sender: "bot", text: "Could not reach the AI query service. Ensure backend is running." }]);
     } finally {
       setAsking(false);
     }
@@ -138,15 +127,15 @@ export default function Dashboard() {
           </div>
           
           <div className="flex gap-2">
-            {/* Quick-toggle button to pull sliding chatbot panel */}
+            {/* Open Drawer Button */}
             <button
-              onClick={() => setIsChatOpen(!isChatOpen)}
-              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg shadow-sm transition-all"
+              onClick={() => setIsChatOpen(true)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3.5 py-1.5 rounded-lg shadow-sm transition-all"
             >
               <MessageSquare size={13} />
-              {isChatOpen ? "Close Assistant" : "Open Assistant"}
+              Open Assistant Drawer
             </button>
-            
+
             <button 
               onClick={loadData}
               disabled={refreshing}
@@ -160,14 +149,13 @@ export default function Dashboard() {
 
         {/* Metrics Overview */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-sm transition-all hover:shadow">
+          <div className="bg-white rounded-xl p-5 border border-slate-200/80 shadow-sm">
             <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Ingested Records</div>
             <div className="text-3xl font-bold text-slate-900 mt-1">
               {summary ? summary.total_records : <Loader2 size={24} className="animate-spin text-slate-400" />}
             </div>
           </div>
-          
-          <div className="bg-white rounded-xl p-5 border border-red-100 shadow-sm transition-all hover:shadow">
+          <div className="bg-white rounded-xl p-5 border border-red-100 shadow-sm">
             <div className="text-red-500 text-xs font-semibold flex items-center gap-1 uppercase tracking-wider">
               <AlertTriangle size={14} /> Flagged Exceptions
             </div>
@@ -175,8 +163,7 @@ export default function Dashboard() {
               {summary ? summary.flagged_records : <Loader2 size={24} className="animate-spin text-red-400" />}
             </div>
           </div>
-          
-          <div className="bg-white rounded-xl p-5 border border-green-100 shadow-sm transition-all hover:shadow">
+          <div className="bg-white rounded-xl p-5 border border-green-100 shadow-sm">
             <div className="text-green-600 text-xs font-semibold flex items-center gap-1 uppercase tracking-wider">
               <CheckCircle size={14} /> Passed Validation
             </div>
@@ -279,14 +266,14 @@ export default function Dashboard() {
                 Aggregates recurring data issues from your validation engine. It uses Gemini to draft concrete plant corrective workflows.
               </p>
               {insights && (
-                <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed shadow-inner max-h-60 overflow-y-auto">
+                <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed shadow-inner">
                   {insights}
                 </div>
               )}
             </div>
           </div>
 
-          {/* AI Q&A Assistant (Now Linked with Sliding panel!) */}
+          {/* Connected On-Page Q&A Assistant */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
             <div>
               <h2 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
@@ -300,27 +287,25 @@ export default function Dashboard() {
                   type="text"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAsk()}
+                  onKeyDown={(e) => e.key === "Enter" && !asking && handleAsk()}
                   placeholder="e.g. Which plant has the highest number of exceptions?"
                   className="flex-1 border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none rounded-lg px-3 py-2 text-sm transition-all"
                 />
                 <button
-                  onClick={() => handleAsk()}
-                  disabled={asking}
+                  onClick={handleAsk}
+                  disabled={asking || !question.trim()}
                   className="bg-slate-900 hover:bg-slate-800 active:scale-95 text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm font-semibold shadow transition-all"
                 >
                   {asking ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
                   Ask
                 </button>
               </div>
-
-              {/* Displays the LAST response from your shared chat history log */}
+              
+              {/* Display the last message in history */}
               {chatHistory.length > 1 && (
-                <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-4 text-sm text-slate-700 max-h-60 overflow-y-auto">
-                  <div className="font-semibold text-xs text-blue-600 mb-1">Latest Conversation:</div>
-                  <div className="whitespace-pre-wrap font-sans leading-relaxed">
-                    {chatHistory[chatHistory.length - 1].text}
-                  </div>
+                <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
+                  <span className="text-blue-600 font-bold block text-xs mb-1 uppercase">Latest Response:</span>
+                  {chatHistory[chatHistory.length - 1].text}
                 </div>
               )}
             </div>
@@ -330,14 +315,14 @@ export default function Dashboard() {
 
       </div>
 
-      {/* SLIDING CHATBOT DRAWER PANEL */}
-      {/* Both the panel and the Q&A card now manipulate this exact shared history array */}
+      {/* RENDER THE SLIDING PANEL AND PASS SHARED PROPS */}
       <SlidingChatbot 
         messages={chatHistory} 
-        setMessages={setChatHistory} 
         isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)}
-        onSendMessage={handleAsk} // Passes the fetch triggers directly down
+        onClose={() => setIsChatOpen(false)} 
+        question={question}
+        setQuestion={setQuestion}
+        onSend={handleAsk}
         asking={asking}
       />
 
