@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React from 'react';
+import iyandaImg from "./assets/iyanda.jpg";
+import greatnessImg from "./assets/greatness.jpg";
 
 export default function AboutUs() {
   const team = [
@@ -9,7 +11,7 @@ export default function AboutUs() {
       dept: "Electrical & Electronic Engineering",
       institution: "University of Ibadan",
       bio: "An undergraduate engineer specializing in building high-performance software systems integrated closely with physical embedded hardware. Passionate about IoT development, robust web architectures, and creating secure, data-driven automation pipelines.",
-      avatar: "/daniel.jpg",
+      avatar: iyandaImg,
       interests: [
         "⚙️ Embedded Systems & IoT",
         "💻 Frontend Web Architecture",
@@ -18,7 +20,7 @@ export default function AboutUs() {
       socials: {
         github: "https://github.com",
         linkedin: "https://linkedin.com",
-        email: "mailto:daniel@example.com"
+        email: "mailto:daninioluwab@gmail.com"
       }
     },
     {
@@ -27,16 +29,15 @@ export default function AboutUs() {
       dept: "Civil Engineering",
       institution: "University of Ibadan",
       bio: "An engineering student focused on operational frameworks and structural systems. Bringing systematic problem-solving methods, system design paradigms, and analytical structures to ensure software operations are streamlined and resilient.",
-      avatar: "/greatness.jpg",
+      avatar: greatnessImg,
       interests: [
         "🏗️ Structural Infrastructure",
         "📊 Operational Management",
         "📐 System Design Paradigms"
       ],
       socials: {
-        github: "https://github.com",
         linkedin: "https://linkedin.com",
-        email: "mailto:greatness@example.com"
+        email: "mailto:"
       }
     }
   ];
@@ -51,10 +52,10 @@ export default function AboutUs() {
             Project Creators
           </span>
           <h1 className="text-3xl font-extrabold mt-3 text-slate-900 dark:text-white tracking-tight">
-            Meet Team DaGreat
+            Meet Team Veritas
           </h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 leading-relaxed">
-            Representing the University of Ibadan at the DCP University Engineering Challenge. Bridging the gap between software development, hardware automation, and analytical operations.
+            Team Veritas | University of Ibadan. Building 'Veritas Pulse' to bridge the gap between frontend software development, hardware automation, and digital KPI analytics for the DCP Challenge.
           </p>
         </div>
 

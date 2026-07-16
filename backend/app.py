@@ -1,16 +1,11 @@
 import os
 import sqlite3
-import pandas as pd
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import google.generativeai as genai
-
-# PandasAI imports
-from pandasai import SmartDataframe
-from pandasai.llm import GoogleGemini
 
 # Load environmental variables
 load_dotenv()
@@ -149,6 +144,7 @@ def get_insights():
         if not anomalies:
             return {"insights": "No pending flagged exceptions are present. Database state is currently nominal."}
 
+        # Format DB data directly into LLM Prompt
         context_string = "\n".join([
             f"- Plant: {a['plant']} | Parameter: {a['kpi_name']} | Recorded Value: {a['value']} | System Alert: {a['flag_reason']}"
             for a in anomalies
@@ -175,36 +171,43 @@ Respond with professional, authoritative formatting. Keep your answer technical,
 
 @app.post("/api/ask")
 def ask_assistant(payload: QueryRequest):
-    """Answers natural language queries using PandasAI and Gemini conversational grounding."""
+    """Answers arbitrary natural language queries grounded entirely to the database records."""
     if not api_key:
         return {"answer": "Gemini API Key is missing. Please populate your .env file."}
 
     try:
-        # 1. Load the SQLite kpi_records table into a Pandas DataFrame
+        # Pull down the complete table state to use as grounding context
         conn = sqlite3.connect(DB_FILE)
-        df = pd.read_sql_query("SELECT * FROM kpi_records", conn)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM kpi_records")
+        all_data = [dict(row) for row in cursor.fetchall()]
         conn.close()
 
-        # 2. Configure the Gemini LLM for PandasAI
-        llm = GoogleGemini(api_token=api_key)
+        context_string = "\n".join([
+            f"Record ID {d['id']}: Plant={d['plant']}, Metric={d['kpi_name']}, Date={d['date']}, Value={d['value']}, Status={d['status']}, Error={d['flag_reason']}"
+            for d in all_data
+        ])
 
-        # 3. Wrap inside a Conversational SmartDataframe
-        smart_df = SmartDataframe(
-            df,
-            config={
-                "llm": llm,
-                "conversational": True,  # Keep outputs narrative & conversational
-                "custom_instructions": "Format your final answer as clear, bulleted, conversational text. Avoid outputting raw Markdown markdown tables unless explicitly asked."
-            }
-        )
+        prompt = f"""
+You are an integrated AI SQL Analyst on the 'Veritas Pulse' platform.
+Ground your response strictly within this current database dump:
 
-        # 4. Generate query answer
-        answer = smart_df.chat(payload.question)
-        
-        return {"answer": str(answer)}
+{context_string}
+
+User's Query: "{payload.question}"
+
+Instructions:
+- Base your response strictly on the factual database dump above.
+- If the question involves computing averages, totals, counts, or finding max/min values, execute the arithmetic step-by-step mentally.
+- Keep the response short, clear, and targeted.
+"""
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        response = model.generate_content(prompt)
+        return {"answer": response.text.strip()}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PandasAI Grounding Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Assistant Grounding Error: {str(e)}")
 
 
 if __name__ == "__main__":
