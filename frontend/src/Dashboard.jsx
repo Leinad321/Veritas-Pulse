@@ -8,22 +8,33 @@ import {
   Lightbulb, 
   RefreshCw, 
   Database,
-  Layers
+  Layers,
+  MessageSquare // New icon for opening the sliding assistant
 } from "lucide-react";
+import SlidingChatbot from "./SlidingChatbot"; // Ensure this import path matches your folder structure
 
 const API_BASE = "http://localhost:8000";
 
 export default function Dashboard() {
+  // --- Original Data & Validation Pipeline States ---
   const [summary, setSummary] = useState(null);
   const [records, setRecords] = useState([]);
   const [filter, setFilter] = useState("all");
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [asking, setAsking] = useState(false);
   const [insights, setInsights] = useState("");
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  // --- Unified Chat & AI Assistant States ---
+  const [question, setQuestion] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false); // Controls the sliding panel visibility
+  
+  // This state is shared. If the sliding panel is open, it shows this exact same history!
+  const [chatHistory, setChatHistory] = useState([
+    { sender: 'bot', text: "Hi! Ask me any analytical questions about your KPI data." }
+  ]);
+
+  // Load KPI Metrics and Stream Validation Log Data
   const loadData = async () => {
     setRefreshing(true);
     try {
@@ -46,6 +57,7 @@ export default function Dashboard() {
     }
   };
 
+  // Run AI Patterns Engine
   const loadInsights = async () => {
     setLoadingInsights(true);
     setInsights("");
@@ -57,7 +69,6 @@ export default function Dashboard() {
       if (typeof data.insights === "string") {
         setInsights(data.insights);
       } else if (data.patterns) {
-        // Fallback translation if backend returns structured patterns array
         const patternText = data.patterns.map(p => 
           `Pattern: ${p.error_type} (Count: ${p.occurrence_count})\nRoot-Cause: ${p.suggested_root_cause}\nNext Step: ${p.next_step}`
         ).join("\n\n");
@@ -79,31 +90,41 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [filter]);
 
-  const handleAsk = async () => {
-    if (!question.trim()) return;
+  // Unified Message Dispatcher (Sends query to API and synchronizes the conversation)
+  const handleAsk = async (explicitText = "") => {
+    const textToSend = explicitText.trim() || question.trim();
+    if (!textToSend) return;
+
     setAsking(true);
-    setAnswer("");
+    if (!explicitText) setQuestion(""); // Clear the input field on submit
+
+    // Update local chat logs instantly to show the user's question
+    const updatedHistoryWithUser = [...chatHistory, { sender: 'user', text: textToSend }];
+    setChatHistory(updatedHistoryWithUser);
+
     try {
       const res = await fetch(`${API_BASE}/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question: textToSend }),
       });
+      
       if (res.ok) {
         const data = await res.json();
-        setAnswer(data.answer);
+        // Append backend response safely to the synchronized history
+        setChatHistory([...updatedHistoryWithUser, { sender: 'bot', text: data.answer }]);
       } else {
-        setAnswer("The AI gateway returned an error. Please try again.");
+        setChatHistory([...updatedHistoryWithUser, { sender: 'bot', text: "The AI gateway returned an error. Please try again." }]);
       }
     } catch (e) {
-      setAnswer("Could not reach the AI query service. Ensure backend app.py is running.");
+      setChatHistory([...updatedHistoryWithUser, { sender: 'bot', text: "Could not reach the AI query service. Ensure backend app.py is running." }]);
     } finally {
       setAsking(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 font-sans">
+    <div className="min-h-screen bg-slate-50 p-6 font-sans relative">
       <div className="max-w-5xl mx-auto">
         
         {/* Top Header */}
@@ -116,14 +137,25 @@ export default function Dashboard() {
             <p className="text-slate-500 text-sm mt-1">Digital KPI Automation & Exception Quality Gateway</p>
           </div>
           
-          <button 
-            onClick={loadData}
-            disabled={refreshing}
-            className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg shadow-sm transition-all"
-          >
-            <RefreshCw size={13} className={refreshing ? "animate-spin text-blue-600" : ""} />
-            Sync Pipeline
-          </button>
+          <div className="flex gap-2">
+            {/* Quick-toggle button to pull sliding chatbot panel */}
+            <button
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg shadow-sm transition-all"
+            >
+              <MessageSquare size={13} />
+              {isChatOpen ? "Close Assistant" : "Open Assistant"}
+            </button>
+            
+            <button 
+              onClick={loadData}
+              disabled={refreshing}
+              className="flex items-center gap-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-lg shadow-sm transition-all"
+            >
+              <RefreshCw size={13} className={refreshing ? "animate-spin text-blue-600" : ""} />
+              Sync Pipeline
+            </button>
+          </div>
         </header>
 
         {/* Metrics Overview */}
@@ -247,14 +279,14 @@ export default function Dashboard() {
                 Aggregates recurring data issues from your validation engine. It uses Gemini to draft concrete plant corrective workflows.
               </p>
               {insights && (
-                <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed shadow-inner">
+                <div className="bg-amber-50/50 border border-amber-100 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed shadow-inner max-h-60 overflow-y-auto">
                   {insights}
                 </div>
               )}
             </div>
           </div>
 
-          {/* AI Q&A Assistant */}
+          {/* AI Q&A Assistant (Now Linked with Sliding panel!) */}
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
             <div>
               <h2 className="font-bold text-slate-900 flex items-center gap-2 mb-3">
@@ -273,7 +305,7 @@ export default function Dashboard() {
                   className="flex-1 border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none rounded-lg px-3 py-2 text-sm transition-all"
                 />
                 <button
-                  onClick={handleAsk}
+                  onClick={() => handleAsk()}
                   disabled={asking}
                   className="bg-slate-900 hover:bg-slate-800 active:scale-95 text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm font-semibold shadow transition-all"
                 >
@@ -281,9 +313,14 @@ export default function Dashboard() {
                   Ask
                 </button>
               </div>
-              {answer && (
-                <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
-                  {answer}
+
+              {/* Displays the LAST response from your shared chat history log */}
+              {chatHistory.length > 1 && (
+                <div className="bg-slate-50 border border-slate-200/60 rounded-lg p-4 text-sm text-slate-700 max-h-60 overflow-y-auto">
+                  <div className="font-semibold text-xs text-blue-600 mb-1">Latest Conversation:</div>
+                  <div className="whitespace-pre-wrap font-sans leading-relaxed">
+                    {chatHistory[chatHistory.length - 1].text}
+                  </div>
                 </div>
               )}
             </div>
@@ -292,6 +329,18 @@ export default function Dashboard() {
         </div>
 
       </div>
+
+      {/* SLIDING CHATBOT DRAWER PANEL */}
+      {/* Both the panel and the Q&A card now manipulate this exact shared history array */}
+      <SlidingChatbot 
+        messages={chatHistory} 
+        setMessages={setChatHistory} 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)}
+        onSendMessage={handleAsk} // Passes the fetch triggers directly down
+        asking={asking}
+      />
+
     </div>
   );
 }
