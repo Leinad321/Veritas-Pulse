@@ -1,0 +1,36 @@
+# Dependency directories (never upload node_modules!)
+node_modules/
+jspm_packages/
+web_modules/
+
+# Local environment files (crucial for security!)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Databases & local files
+*.db
+*.sqlite3
+
+# Production build outputs
+dist/
+build/
+
+# IDE / Editor configurations
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
