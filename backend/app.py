@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 import google.generativeai as genai
+from fastapi.middleware.cors import CORSMiddleware
 
 # Load environmental variables
 load_dotenv()
@@ -17,6 +18,18 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 app = FastAPI(title="Veritas Pulse Gateway Backend")
+origins = [
+    "http://localhost:5173", # For your local frontend testing
+    "https://veritas-pulse.vercel.app" # Replace this with your actual, live Vercel URL!
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Enable CORS for React Frontend (localhost:5173)
 app.add_middleware(
