@@ -59,7 +59,7 @@ It needs `lucide-react` installed:
 npm install lucide-react
 ```
 Render `<Dashboard />` as your main app component. It talks to
-`http://localhost:8000` by default, change `API_BASE` in Dashboard.jsx if your
+`https://veritas-pulse-backend.onrender.com' by default, change `API_BASE` in Dashboard.jsx if your
 API runs elsewhere.
 
 ## Live demo flow (for the pitch)

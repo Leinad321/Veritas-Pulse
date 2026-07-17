@@ -21,7 +21,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://veritas-pulse-backend.onrender.com";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);

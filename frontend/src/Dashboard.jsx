@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import SlidingChatbot from "./SlidingChatbot"; // Import our brand-new sliding drawer
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://veritas-pulse-backend.onrender.com";
 
 export default function Dashboard() {
   // --- Original Validation Dashboard States ---
