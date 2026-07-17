@@ -124,7 +124,7 @@ function App() {
             </div>
             <div>
               <span className="font-bold text-slate-800 dark:text-white text-base tracking-tight block">Veritas Pulse</span>
-              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold tracking-wider uppercase block -mt-1">Team DaGreat</span>
+              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold tracking-wider uppercase block -mt-1">Team Veritas</span>
             </div>
           </div>
 
@@ -289,7 +289,7 @@ function App() {
       {/* 3. Global Footer */}
       <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-12 text-center text-xs text-slate-400">
         <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© 2026 Team DaGreat. Submitted for the DCP University Engineering Challenge.</p>
+          <p>© 2026 Team Veritas. Submitted for the DCP University Engineering Challenge.</p>
           <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
             <Award size={14} className="text-amber-500" /> Organized by ULES ARB
           </div>
