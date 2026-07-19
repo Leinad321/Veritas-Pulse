@@ -2,14 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import Dashboard from './Dashboard';
 import AboutUs from './AboutUs';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Award, 
-  Lock, 
-  LogOut, 
-  CheckCircle2, 
-  Sun, 
+import {
+  LayoutDashboard,
+  Award,
+  Lock,
+  LogOut,
+  CheckCircle2,
+  Sun,
   Moon,
   MessageSquare,
   X,
@@ -18,10 +17,28 @@ import {
   TrendingUp,
   FileSpreadsheet,
   Cpu,
-  ArrowRight
+  ArrowRight,
+  Radio
 } from 'lucide-react';
 
 const API_BASE = "https://veritas-pulse-backend.onrender.com";
+
+// The pulse line is the signature element of this design: an oscilloscope-style
+// trace that visually is the "Pulse" in Veritas Pulse. Reused in the hero and
+// as a section divider so it reads as a system, not a one-off decoration.
+const PulseLine = ({ className = "", strokeWidth = 2 }) => (
+  <svg viewBox="0 0 800 60" preserveAspectRatio="none" className={className} aria-hidden="true">
+    <path
+      d="M0,30 L160,30 L185,30 L200,8 L215,52 L230,30 L260,30 L340,30 L360,18 L375,42 L390,30 L800,30"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="pulse-trace"
+    />
+  </svg>
+);
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,7 +48,7 @@ function App() {
   const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState('home'); // Defaults to public Home page
   const [isChatOpen, setIsChatOpen] = useState(false);
-  
+
   // Chatbot Assistant States
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState([
@@ -41,7 +58,7 @@ function App() {
 
   // Theme State
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'light';
+    return localStorage.getItem('theme') || 'dark';
   });
 
   useEffect(() => {
@@ -112,54 +129,144 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans transition-colors duration-200 relative">
-      
-      {/* 1. Global Navigation Bar (Always Visible) */}
-      <nav className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm">
+    <div className="vp-root min-h-screen flex flex-col relative">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+        :root {
+          --bg-base: #F3F5F7;
+          --bg-panel: #FFFFFF;
+          --bg-panel-raised: #F7F9FA;
+          --border-hair: rgba(15, 23, 32, 0.10);
+          --text-primary: #10151B;
+          --text-muted: #5B6472;
+          --accent-kiln: #E85D1F;
+          --accent-cyan: #0E9C89;
+          --grid-line: rgba(15, 23, 32, 0.045);
+        }
+        html.dark {
+          --bg-base: #12161B;
+          --bg-panel: #1B2129;
+          --bg-panel-raised: #212933;
+          --border-hair: rgba(255, 255, 255, 0.09);
+          --text-primary: #EDEFF2;
+          --text-muted: #8891A0;
+          --accent-kiln: #FF7A33;
+          --accent-cyan: #38DFC9;
+          --grid-line: rgba(255, 255, 255, 0.045);
+        }
+
+        .vp-root {
+          background-color: var(--bg-base);
+          color: var(--text-primary);
+          font-family: 'Inter', sans-serif;
+          background-image:
+            linear-gradient(var(--grid-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+          background-size: 42px 42px;
+        }
+        .vp-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.01em; }
+        .vp-mono { font-family: 'JetBrains Mono', monospace; letter-spacing: 0.02em; }
+
+        .vp-panel {
+          background-color: var(--bg-panel);
+          border: 1px solid var(--border-hair);
+        }
+        .vp-panel-raised { background-color: var(--bg-panel-raised); }
+
+        .pulse-trace {
+          color: var(--accent-kiln);
+          stroke-dasharray: 900;
+          stroke-dashoffset: 900;
+          animation: vp-draw 2.4s ease-out forwards, vp-glow 3s ease-in-out 2.4s infinite;
+        }
+        @keyframes vp-draw { to { stroke-dashoffset: 0; } }
+        @keyframes vp-glow {
+          0%, 100% { opacity: 0.75; }
+          50% { opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .pulse-trace { animation: none; stroke-dashoffset: 0; }
+        }
+
+        .vp-corner-panel {
+          position: relative;
+          background-color: var(--bg-panel);
+          border: 1px solid var(--border-hair);
+        }
+        .vp-corner-panel::before, .vp-corner-panel::after,
+        .vp-corner-panel .vp-corner-br, .vp-corner-panel .vp-corner-bl {
+          content: '';
+          position: absolute;
+          width: 14px;
+          height: 14px;
+          border-color: var(--accent-kiln);
+          opacity: 0.7;
+        }
+        .vp-corner-panel::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+        .vp-corner-panel::after { top: -1px; right: -1px; border-top: 2px solid; border-right: 2px solid; }
+        .vp-corner-panel .vp-corner-bl { bottom: -1px; left: -1px; border-bottom: 2px solid; border-left: 2px solid; }
+        .vp-corner-panel .vp-corner-br { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+        .vp-focus:focus-visible {
+          outline: 2px solid var(--accent-cyan);
+          outline-offset: 2px;
+        }
+
+        .vp-status-dot {
+          box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-cyan) 20%, transparent);
+        }
+      `}</style>
+
+      {/* 1. Global Navigation Bar */}
+      <nav className="vp-panel sticky top-0 z-40" style={{ borderLeft: 'none', borderRight: 'none', borderTop: 'none' }}>
         <div className="max-w-5xl mx-auto px-6 h-16 flex justify-between items-center">
-          
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <div className="bg-blue-600 text-white p-2 rounded-lg font-bold text-lg shadow-sm">
+
+          <div className="flex items-center gap-3 cursor-pointer vp-focus" onClick={() => setActiveTab('home')} tabIndex={0}>
+            <div
+              className="w-9 h-9 rounded-md flex items-center justify-center vp-mono font-bold text-xs"
+              style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
+            >
               DCP
             </div>
             <div>
-              <span className="font-bold text-slate-800 dark:text-white text-base tracking-tight block">Veritas Pulse</span>
-              <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold tracking-wider uppercase block -mt-1">Team Veritas</span>
+              <span className="vp-display font-bold text-base block leading-tight">Veritas Pulse</span>
+              <span
+                className="vp-mono text-[10px] uppercase tracking-wider block"
+                style={{ color: 'var(--accent-cyan)' }}
+              >
+                Team Veritas &middot; Track 4
+              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1 border-r border-slate-200 dark:border-slate-800 pr-3">
-              <button
-                onClick={() => setActiveTab('home')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === 'home'
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                Home
-              </button>
-              <button
-                onClick={() => setActiveTab('about')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  activeTab === 'about'
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                About Team
-              </button>
-              
-              {/* Only show Console Tab if Logged In */}
+          <div className="flex items-center gap-4">
+            <div className="flex gap-1 pr-4" style={{ borderRight: '1px solid var(--border-hair)' }}>
+              {[
+                { id: 'home', label: 'Home' },
+                { id: 'about', label: 'About Team' },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="vp-focus px-3 py-1.5 rounded-md text-xs font-semibold vp-display transition-colors"
+                  style={{
+                    color: activeTab === tab.id ? 'var(--accent-kiln)' : 'var(--text-muted)',
+                    backgroundColor: activeTab === tab.id ? 'var(--bg-panel-raised)' : 'transparent'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+
               {isAuthenticated && (
                 <button
                   onClick={() => setActiveTab('dashboard')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    activeTab === 'dashboard'
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 shadow-sm'
-                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-                  }`}
+                  className="vp-focus flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold vp-display transition-colors"
+                  style={{
+                    color: activeTab === 'dashboard' ? 'var(--accent-kiln)' : 'var(--text-muted)',
+                    backgroundColor: activeTab === 'dashboard' ? 'var(--bg-panel-raised)' : 'transparent'
+                  }}
                 >
                   <LayoutDashboard size={13} />
                   Operational Portal
@@ -167,19 +274,20 @@ function App() {
               )}
             </div>
 
-            {/* Theme Toggle */}
-            <button 
+            <button
               onClick={toggleTheme}
-              className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+              className="vp-focus p-1.5 rounded-md transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+              aria-label="Toggle theme"
             >
               {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>
 
-            {/* Auth Action Button */}
             {isAuthenticated ? (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-all"
+                className="vp-focus flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors"
+                style={{ color: '#E5484D' }}
               >
                 <LogOut size={14} />
                 Sign Out
@@ -187,90 +295,114 @@ function App() {
             ) : (
               <button
                 onClick={() => setShowLoginModal(true)}
-                className="bg-slate-900 dark:bg-blue-600 text-white font-semibold text-xs px-4 py-2 rounded-lg hover:bg-slate-800 dark:hover:bg-blue-500 transition-all flex items-center gap-1"
+                className="vp-focus font-semibold text-xs px-4 py-2 rounded-md flex items-center gap-1.5 transition-transform hover:scale-[1.02]"
+                style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
               >
                 <Lock size={12} />
                 Client Gateway
               </button>
             )}
           </div>
-
         </div>
       </nav>
 
       {/* 2. Main Body Routes */}
       <main className="flex-1">
         {activeTab === 'home' && (
-          <div className="max-w-5xl mx-auto px-6 py-12 font-sans">
-            {/* Hero Section */}
-            <div className="text-center max-w-2xl mx-auto mb-16">
-              <span className="bg-blue-100 dark:bg-blue-950/50 text-blue-800 dark:text-blue-300 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                Industrial Intelligence Gateway
+          <div className="max-w-5xl mx-auto px-6 py-16">
+            {/* Hero */}
+            <div className="max-w-2xl mb-6">
+              <span
+                className="vp-mono inline-block text-[10px] font-semibold px-2.5 py-1 rounded uppercase tracking-wider"
+                style={{ backgroundColor: 'var(--bg-panel-raised)', color: 'var(--accent-cyan)', border: '1px solid var(--border-hair)' }}
+              >
+                <Radio size={10} className="inline mr-1.5 -mt-0.5" />
+                Live telemetry validation
               </span>
-              <h1 className="text-4xl md:text-5xl font-extrabold mt-4 text-slate-900 dark:text-white tracking-tight">
-                Data Assurance & Telemetry Validation
+              <h1 className="vp-display text-4xl md:text-[3.25rem] font-bold mt-5 leading-[1.05]">
+                Every KPI, verified<br />before it reaches a report.
               </h1>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-4 leading-relaxed">
-                Veritas Pulse automatically processes, monitors, and validates real-time plant KPIs to detect industrial anomalies and prevent telemetry drift. Underpinned by custom rule evaluation engines and Gemini-powered mitigation flows.
+              <p className="text-sm md:text-base mt-5 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Veritas Pulse sits between plant-floor Excel reporting and management decisions, catching bad readings, tracing recurring faults, and answering questions on the validated record, grounded, not guessed.
               </p>
-              <div className="mt-8 flex justify-center gap-3">
-                {isAuthenticated ? (
-                  <button 
-                    onClick={() => setActiveTab('dashboard')}
-                    className="bg-blue-600 text-white font-semibold text-xs px-5 py-3 rounded-xl hover:bg-blue-500 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
-                  >
-                    Open Console
-                    <ArrowRight size={14} />
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => setShowLoginModal(true)}
-                    className="bg-blue-600 text-white font-semibold text-xs px-5 py-3 rounded-xl hover:bg-blue-500 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
-                  >
-                    Launch Core Portal
-                    <ArrowRight size={14} />
-                  </button>
-                )}
-                <button 
-                  onClick={() => setActiveTab('about')}
-                  className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 font-semibold text-xs px-5 py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
-                >
-                  Meet Our Team
-                </button>
-              </div>
             </div>
 
-            {/* Core Features Pillars */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/50 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
-                  <FileSpreadsheet size={20} />
-                </div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">Anomaly Lock Gateway</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-2 leading-relaxed">
-                  Bridges legacy operational spreadsheet reporting with automated relational storage, instantly flagging out-of-spec readings.
-                </p>
-              </div>
+            {/* Signature pulse line */}
+            <div className="mb-10 -mx-6 md:mx-0">
+              <PulseLine className="w-full h-10" strokeWidth={2.5} />
+            </div>
 
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/50 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
-                  <Cpu size={20} />
-                </div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">Active AI Remediation</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-2 leading-relaxed">
-                  Integrates Gemini models to evaluate exception telemetry logs on the fly, auto-generating concrete engineering corrective briefs.
-                </p>
-              </div>
+            <div className="flex flex-wrap gap-3 mb-16">
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className="vp-focus font-semibold text-xs px-5 py-3 rounded-md flex items-center gap-2 transition-transform hover:scale-[1.02]"
+                  style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
+                >
+                  Open Console
+                  <ArrowRight size={14} />
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="vp-focus font-semibold text-xs px-5 py-3 rounded-md flex items-center gap-2 transition-transform hover:scale-[1.02]"
+                  style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
+                >
+                  Launch Core Portal
+                  <ArrowRight size={14} />
+                </button>
+              )}
+              <button
+                onClick={() => setActiveTab('about')}
+                className="vp-focus vp-panel font-semibold text-xs px-5 py-3 rounded-md transition-colors"
+              >
+                Meet Our Team
+              </button>
+            </div>
 
-              <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/50 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 mb-4">
-                  <TrendingUp size={20} />
+            {/* Pipeline stages, real sequence: intake -> reasoning -> access */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {[
+                {
+                  stage: 'STAGE — INTAKE',
+                  icon: FileSpreadsheet,
+                  title: 'Anomaly Lock Gateway',
+                  copy: 'Bridges legacy operational spreadsheet reporting with automated relational storage, instantly flagging out-of-spec readings.'
+                },
+                {
+                  stage: 'STAGE — REASONING',
+                  icon: Cpu,
+                  title: 'Active AI Remediation',
+                  copy: 'Integrates Gemini models to evaluate exception telemetry logs on the fly, auto-generating concrete engineering corrective briefs.'
+                },
+                {
+                  stage: 'STAGE — ACCESS',
+                  icon: TrendingUp,
+                  title: 'Grounded QA Chatbot',
+                  copy: 'Empowers operations room staff to query the validation logs securely in natural language, ensuring absolute technical clarity.'
+                }
+              ].map((card, idx) => (
+                <div key={idx} className="vp-corner-panel p-6 rounded-md">
+                  <div className="vp-corner-br"></div>
+                  <div className="vp-corner-bl"></div>
+                  <span
+                    className="vp-mono text-[9px] font-semibold tracking-widest"
+                    style={{ color: 'var(--accent-kiln)' }}
+                  >
+                    {card.stage}
+                  </span>
+                  <div
+                    className="w-9 h-9 rounded flex items-center justify-center mt-3 mb-4"
+                    style={{ backgroundColor: 'var(--bg-panel-raised)', color: 'var(--accent-cyan)' }}
+                  >
+                    <card.icon size={18} />
+                  </div>
+                  <h3 className="vp-display font-bold text-sm">{card.title}</h3>
+                  <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                    {card.copy}
+                  </p>
                 </div>
-                <h3 className="font-bold text-slate-900 dark:text-white text-base">Grounded QA Chatbot</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-xs mt-2 leading-relaxed">
-                  Empowers operations room staff to query the validation logs securely in natural language, ensuring absolute technical clarity.
-                </p>
-              </div>
+              ))}
             </div>
           </div>
         )}
@@ -280,165 +412,186 @@ function App() {
         {activeTab === 'dashboard' && (
           isAuthenticated ? <Dashboard /> : (
             <div className="text-center py-20">
-              <p className="text-red-500 text-sm font-semibold">Security Gate Active: Please authenticate through Client Gateway.</p>
+              <p className="text-sm font-semibold" style={{ color: '#E5484D' }}>
+                Security Gate Active: Please authenticate through Client Gateway.
+              </p>
             </div>
           )
         )}
       </main>
 
-      {/* 3. Global Footer */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 mt-12 text-center text-xs text-slate-400">
-        <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© 2026 Team Veritas. Submitted for the DCP University Engineering Challenge.</p>
-          <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
-            <Award size={14} className="text-amber-500" /> Organized by ULES ARB
+      {/* 3. Footer */}
+      <footer className="vp-panel py-6 mt-12" style={{ borderLeft: 'none', borderRight: 'none', borderBottom: 'none' }}>
+        <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+          <p>&copy; 2026 Team Veritas. Submitted for the DCP University Engineering Challenge.</p>
+          <div className="flex items-center gap-1.5 font-medium">
+            <Award size={13} style={{ color: 'var(--accent-kiln)' }} /> Organized by ULES ARB
           </div>
         </div>
       </footer>
 
       {/* 4. Login Modal */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/65 backdrop-blur-sm flex justify-center items-center px-4">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 dark:border-slate-800 p-8 rounded-2xl border border-slate-200 shadow-2xl relative">
-            
-            <button 
+        <div className="fixed inset-0 z-50 flex justify-center items-center px-4" style={{ backgroundColor: 'rgba(10,13,16,0.7)', backdropFilter: 'blur(4px)' }}>
+          <div className="vp-panel w-full max-w-md p-8 rounded-xl relative">
+            <button
               onClick={() => setShowLoginModal(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+              className="vp-focus absolute top-4 right-4 transition-colors"
+              style={{ color: 'var(--text-muted)' }}
+              aria-label="Close"
             >
               <X size={18} />
             </button>
 
-            <div className="text-center mb-6">
-              <div className="inline-flex bg-blue-600 text-white p-2.5 rounded-xl font-bold text-lg shadow-sm mb-2">DCP</div>
-              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">Sign In to Portal</h2>
-              <p className="text-xs text-slate-400 mt-0.5">Secure operations dashboard authorization</p>
+            <div className="mb-6">
+              <div
+                className="inline-flex vp-mono font-bold text-xs px-2.5 py-1.5 rounded mb-3"
+                style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
+              >
+                DCP
+              </div>
+              <h2 className="vp-display text-xl font-bold">Sign In to Portal</h2>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                Secure operations dashboard authorization
+              </p>
             </div>
 
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Username</label>
+                <label className="vp-mono block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                  Username
+                </label>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter 'admin'"
-                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none rounded-xl px-4 py-2 text-sm"
+                  className="vp-focus w-full rounded-lg px-4 py-2.5 text-sm"
+                  style={{ backgroundColor: 'var(--bg-panel-raised)', border: '1px solid var(--border-hair)', color: 'var(--text-primary)' }}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">Password</label>
+                <label className="vp-mono block text-[10px] font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                  Password
+                </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter 'dcp2026'"
-                  className="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none rounded-xl px-4 py-2 text-sm"
+                  className="vp-focus w-full rounded-lg px-4 py-2.5 text-sm"
+                  style={{ backgroundColor: 'var(--bg-panel-raised)', border: '1px solid var(--border-hair)', color: 'var(--text-primary)' }}
                   required
                 />
               </div>
 
               {loginError && (
-                <p className="text-xs text-red-600 font-semibold bg-red-50 dark:bg-red-950/20 p-2.5 rounded-lg border border-red-100 dark:border-red-900/30">
+                <p className="text-xs font-semibold p-2.5 rounded-lg" style={{ color: '#E5484D', backgroundColor: 'rgba(229,72,77,0.1)', border: '1px solid rgba(229,72,77,0.25)' }}>
                   {loginError}
                 </p>
               )}
 
               <button
                 type="submit"
-                className="w-full bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white font-semibold py-3 rounded-xl text-sm"
+                className="vp-focus w-full font-semibold py-3 rounded-lg text-sm transition-transform hover:scale-[1.01]"
+                style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
               >
                 Authenticate Portal
               </button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-850 flex items-start gap-2 text-[10px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/20 -mx-8 -mb-8 p-4 rounded-b-2xl">
-              <CheckCircle2 size={14} className="text-blue-500 shrink-0 mt-0.5" />
+            <div
+              className="mt-6 pt-4 flex items-start gap-2 text-[10px] -mx-8 -mb-8 p-4 rounded-b-xl"
+              style={{ borderTop: '1px solid var(--border-hair)', backgroundColor: 'var(--bg-panel-raised)', color: 'var(--text-muted)' }}
+            >
+              <CheckCircle2 size={14} style={{ color: 'var(--accent-cyan)' }} className="shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Access Credentials:</span> Use <code className="bg-slate-200 dark:bg-slate-800 px-1 rounded font-bold text-blue-600">admin</code> and <code className="bg-slate-200 dark:bg-slate-800 px-1 rounded font-bold text-blue-600">dcp2026</code>.
+                <span className="font-bold">Access Credentials:</span> Use{' '}
+                <code className="vp-mono px-1 rounded font-bold" style={{ backgroundColor: 'var(--bg-panel)', color: 'var(--accent-kiln)' }}>admin</code>{' '}
+                and{' '}
+                <code className="vp-mono px-1 rounded font-bold" style={{ backgroundColor: 'var(--bg-panel)', color: 'var(--accent-kiln)' }}>dcp2026</code>.
               </div>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* 5. FLOATING PERSISTENT CHATBOT ACTION BUTTON */}
+      {/* 5. Floating Chat Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={() => setIsChatOpen(!isChatOpen)}
-          className="bg-blue-600 hover:bg-blue-500 hover:scale-105 active:scale-95 text-white p-4 rounded-full shadow-2xl transition-all flex items-center justify-center gap-2"
+          className="vp-focus p-4 rounded-full shadow-2xl transition-transform hover:scale-105 active:scale-95 flex items-center justify-center"
+          style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
+          aria-label="Toggle assistant"
         >
           {isChatOpen ? <X size={22} /> : <MessageSquare size={22} />}
         </button>
       </div>
 
-      {/* 6. SLIDE-OUT PANEL CHATBOT (1/3 Screen Width) */}
-      <div 
-        className={`fixed top-0 right-0 h-full w-full sm:w-1/3 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-45 transform transition-transform duration-300 ease-in-out flex flex-col ${
+      {/* 6. Slide-out Chat Panel */}
+      <div
+        className={`vp-panel fixed top-0 right-0 h-full w-full sm:w-1/3 z-45 transform transition-transform duration-300 ease-in-out flex flex-col ${
           isChatOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{ borderTop: 'none', borderRight: 'none', borderBottom: 'none' }}
       >
-        {/* Chat Panel Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center mt-16 sm:mt-0">
+        <div className="p-4 flex justify-between items-center mt-16 sm:mt-0" style={{ borderBottom: '1px solid var(--border-hair)', backgroundColor: 'var(--bg-panel-raised)' }}>
           <div>
-            <h3 className="font-bold text-slate-800 dark:text-white text-sm">Veritas Pulse Assistant</h3>
-            <p className="text-[10px] text-slate-400">Grounded Security Operations Agent</p>
+            <h3 className="vp-display font-bold text-sm">Veritas Pulse Assistant</h3>
+            <p className="vp-mono text-[9px] uppercase tracking-wider" style={{ color: 'var(--accent-cyan)' }}>
+              Grounded security operations agent
+            </p>
           </div>
-          <button 
-            onClick={() => setIsChatOpen(false)}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-          >
+          <button onClick={() => setIsChatOpen(false)} className="vp-focus transition-colors" style={{ color: 'var(--text-muted)' }} aria-label="Close assistant">
             <X size={16} />
           </button>
         </div>
 
-        {/* Chat Log Message Window */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {chatMessages.map((msg, idx) => (
-            <div 
-              key={idx} 
-              className={`flex flex-col max-w-[85%] ${msg.sender === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'}`}
-            >
-              <div 
-                className={`p-3 rounded-xl text-xs leading-relaxed ${
-                  msg.sender === 'user' 
-                    ? 'bg-blue-600 text-white rounded-tr-none' 
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-tl-none border border-slate-200/50 dark:border-slate-700/50'
-                }`}
+            <div key={idx} className={`flex flex-col max-w-[85%] ${msg.sender === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+              <div
+                className="p-3 rounded-lg text-xs leading-relaxed"
+                style={
+                  msg.sender === 'user'
+                    ? { backgroundColor: 'var(--accent-kiln)', color: '#12161B', borderTopRightRadius: 0 }
+                    : { backgroundColor: 'var(--bg-panel-raised)', color: 'var(--text-primary)', border: '1px solid var(--border-hair)', borderTopLeftRadius: 0 }
+                }
               >
                 {msg.text}
               </div>
             </div>
           ))}
           {isSendingChat && (
-            <div className="flex items-center gap-1.5 text-slate-400 text-xs pl-1">
+            <div className="flex items-center gap-1.5 text-xs pl-1" style={{ color: 'var(--text-muted)' }}>
               <Loader2 size={12} className="animate-spin" />
-              <span>Analyst is querying local database...</span>
+              <span className="vp-mono">Analyst is querying local database...</span>
             </div>
           )}
         </div>
 
-        {/* Chat Input form */}
-        <form onSubmit={handleSendChatMessage} className="p-3 border-t border-slate-200 dark:border-slate-800 flex gap-2">
+        <form onSubmit={handleSendChatMessage} className="p-3 flex gap-2" style={{ borderTop: '1px solid var(--border-hair)' }}>
           <input
             type="text"
             value={chatInput}
             onChange={(e) => setChatInput(e.target.value)}
             placeholder="Ask database..."
-            className="flex-1 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-850 text-slate-900 dark:text-white focus:border-blue-500 outline-none rounded-lg px-3 py-2 text-xs transition-all"
+            className="vp-focus flex-1 rounded-lg px-3 py-2 text-xs transition-colors"
+            style={{ backgroundColor: 'var(--bg-panel-raised)', border: '1px solid var(--border-hair)', color: 'var(--text-primary)' }}
           />
           <button
             type="submit"
             disabled={isSendingChat}
-            className="bg-slate-900 dark:bg-blue-600 hover:bg-slate-800 dark:hover:bg-blue-500 text-white p-2 rounded-lg transition-all"
+            className="vp-focus p-2 rounded-lg transition-transform hover:scale-105"
+            style={{ backgroundColor: 'var(--accent-kiln)', color: '#12161B' }}
+            aria-label="Send message"
           >
             <Send size={13} />
           </button>
         </form>
       </div>
-
     </div>
   );
 }
